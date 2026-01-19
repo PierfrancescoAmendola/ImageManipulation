@@ -1,4 +1,7 @@
 .venv/
+ImagePython/.venv/
+ImagePython/data/
+*.pth
 __pycache__/
 *.pyc
 *.pyo
