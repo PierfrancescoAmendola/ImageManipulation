@@ -121,8 +121,8 @@ if __name__ == '__main__':
 
             # print statistics
             running_loss += loss.item()
-            if i % 2000 == 1999:    # print every 2000 mini-batches
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
+            if i % 200 == 199:    # stampiamo ogni 200 mini-batches
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 200:.3f}')
                 running_loss = 0.0
 
     print('Finished Training')
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     # Mostra immagini di test
     imshow(torchvision.utils.make_grid(images))
-    print('Etichette reali: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(6)))
+    print('Etichette reali: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
 
     # Carichiamo il modello salvato per sicurezza
     net = Net()
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     outputs = net(images)
     _, predicted = torch.max(outputs, 1)
 
-    print('Predizioni AI:   ', ' '.join(f'{classes[predicted[j]]:5s}' for j in range(6)))
+    print('Predizioni AI:   ', ' '.join(f'{classes[predicted[j]]:5s}' for j in range(4)))
 
     # Calcoliamo la precisione su tutto il dataset di test
     correct = 0
