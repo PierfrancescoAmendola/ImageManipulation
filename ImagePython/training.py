@@ -169,3 +169,6 @@ if __name__ == '__main__':
             correct += (predicted == labels).sum().item()
 
     print(f'\nPrecisione della rete su 10.000 immagini di test: {100 * correct // total} %')
+
+
+#TensorBoardX come stampare la curva della loss, e quell'accuratezza
