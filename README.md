@@ -17,11 +17,54 @@ Script Python per manipolazione e analisi di immagini usando OpenCV, Matplotlib 
 pip install pandas numpy opencv-python matplotlib
 ```
 
-## Uso
+## Setup Ambiente Virtuale
+
+Per creare e attivare un ambiente virtuale:
 
 ```bash
-python prova.py
+python3 -m venv venv
+source venv/bin/activate  # Su macOS/Linux
+# Su Windows: venv\Scripts\activate
 ```
+
+Installa le dipendenze per il training della rete neurale:
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install tensorboard matplotlib numpy
+```
+
+## Uso
+
+Per eseguire gli script di manipolazione immagini:
+
+```bash
+python3 prova.py
+```
+
+Per addestrare la rete neurale su CIFAR-10:
+
+```bash
+python3 ImagePython/training.py
+```
+
+Per aggiornare una rete già addestrata:
+
+```bash
+python3 aggiornamentoSuReteYetTrained.py
+```
+
+## Visualizzazione Risultati con TensorBoard
+
+Per vedere i log di training e i risultati:
+
+```bash
+tensorboard --logdir runs
+```
+
+Apri il browser e vai su `http://localhost:6006`
+
+## Note
 
 ## Note
 
