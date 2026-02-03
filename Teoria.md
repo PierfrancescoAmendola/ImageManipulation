@@ -15,14 +15,16 @@ Questi dati vengono passati a una rete neurale classica (chiamata spesso Dense o
 Conv2d sta per Convoluzione a 2 Dimensioni. Quest'ultima viene considerata come l'operazione matematica fondamentale per la visione artificiale.
 
 Il processo è composto da 4 fasi:
-1) Scorrimento: il kernel si posizione su una porzione dell'immagine
-2) Moltiplicazione: i valori dei pixel dell'immagine vengono moltiplicati per i valori (pesi), che sono contenuti all'interno del kernel
-3) Somma: tutti i risultati poi vengono sommati affinchè si possa ottenere un unico numero
-4) Output: questo numero, ottenuto mediante la somma, diventerà un pixel nella nuova immagine, chiamata feauture map
+1) **Scorrimento**: il kernel si posizione su una porzione dell'immagine
+2) **Moltiplicazione**: i valori dei pixel dell'immagine vengono moltiplicati per i valori (pesi), che sono contenuti all'interno del kernel
+3) **Somma**: tutti i risultati poi vengono sommati affinchè si possa ottenere un unico numero
+4) **Output**: questo numero, ottenuto mediante la somma, diventerà un pixel nella nuova immagine, chiamata feauture map
 
 usiamo tutto ciò perchè a differenze delle reti neurali classiche, che trattano ogni pixel come un dato isolato, la conv2D preserva la relazione spaziale tra i pixel. Serve ad estrarre caratteristiche visive come i bordi, le linee, angoli o texture.
 
 Con out_channels=6, la rete userà 6 kernel diversi contemporaneamente, ognuno specializzato nel trovare qualcosa di diverso
+
+---
 
 ### self.pool = nn.MaxPool2d(2, 2)
 
@@ -34,18 +36,16 @@ La funzione accetta (kernel_size, stride).
 
 Il Max pooling è un operazione di semplificazione che punta all'aggressività. Il suo scopo è quello di entrare all'interno della finestra 2x2 e tenere solo il numero più alto all'interno eliminando i restanti all'interno. Così facendo otteniamo soltanto il massimo, e non ci preouccupiamo di tenere anche gli scarti
 
-1 1 | 2 4
-5 6 | 7 8
--- -- -- -
-3 2 | 1 0
+1 1 | 2 4 \
+5 6 | 7 8 \
+3 2 | 1 0 \
 1 2 | 3 4
 
 se applichiamo il Pool otteremo che il primo blocco avrà i numeri {1,1,5,6} ed il massimo nell'insieme è 6. Quindi manterremo il 6. Nel secondo è 8, terzo 3, quarto 4
 
 così facendo ridurriamo la matrice, o meglio la feature map ottenendo così solamente 4 numeri, che sono i valori più importanti poichè sono i massimi
 
-6 | 8
-- - -
+6 | 8\
 3 | 4
 
 Così facendo l'immagine satà dimezzata e ciò faciliterà la rete nell'assimilarla ma sopratutto sarà più veloce da calcolare
@@ -69,3 +69,83 @@ Quindi entrano 400 numeri distinti.
 
 **L'Output (120):**
 Questi 400 numeri vengono trasformati in 120 nuove caratteristiche più astratte.
+
+---
+
+### Criterion
+
+E' il nome convenzionale dato in pytorch per la loss function.
+Criterion è la componenente matematica che calcola quanto il modello sta sbagliando
+Prende l'output della tua rete (la previsione) e l'etichetta vera (la realtà), e restituisce un numero unico (la loss).
+
+1) Se la loss è **alta** → il modello ha sbagliato di molto.
+2) Se la loss è **bassa** → il modello ha quasi indovinato.
+
+L'ottimizzatore (optimizer) userà questo numero per aggiornare i pesi e ridurre l'errore nel futuro.
+
+Abbiamo 2 tipi principali di tipi di lossFunction in base al tipo di problema che devono risolvere:
+1) Problemi di **Classificazione**
+2) Problemi di **Regressione**
+
+I tipi di funzioni per i problemi di **Classificazione** sono:
+1) **nn.CrossEntropyLoss()**
+
+**A che serve**: È la più usata per la classificazione Multi-classe (es. CIFAR-10, MNIST: classi 0-9).
+
+**Come funziona:** Combina internamente una LogSoftmax e una NLLLoss. Si aspetta che la rete restituisca dei "logits" (valori grezzi non normalizzati) per ogni classe. Penalizza fortemente se la rete dà una probabilità bassa alla classe corretta.
+
+**Esempio:** Riconoscere cifre scritte a mano.
+
+2) **nn.BCEWithLogitsLoss() (Binary Cross Entropy)**
+
+**A che serve:** Per la classificazione Binaria (solo due classi: 0 o 1, Sì o No).
+
+**Come funziona:** È più stabile numericamente della semplice BCELoss. Si applica quando l'ultimo strato della rete è un unico neurone che deve dire "quanto è probabile che sia 1".
+
+**Esempio:** Riconoscere se un'email è Spam (1) o Non Spam (0).
+
+3) **nn.NLLLoss() (Negative Log Likelihood)**
+
+**A che serve:** Simile alla CrossEntropy, ma si usa se la tua rete ha già un layer LogSoftmax come ultima uscita.
+
+**Nota:** Spesso si preferisce usare direttamente CrossEntropyLoss (che include già la Softmax) per semplicità, ma NLLLoss è utile se devi manipolare le probabilità manualmente prima della loss
+
+I tipi di funzioni per i problemi di **Regressione** sono:
+
+1) **nn.MSELoss() (Mean Squared Error)**
+
+**A che serve:** È lo standard per la regressione.
+
+**Come funziona:** Calcola la media dei quadrati delle differenze tra previsione e realtà: (y− 
+y
+^
+​	
+ ) 
+2
+ .
+
+**Caratteristica:** Poiché eleva al quadrato, penalizza enormemente gli errori grandi (gli outlier).
+
+**Esempio:** Prevedere il prezzo di una casa in base ai metri quadri.
+
+2) **nn.L1Loss() (Mean Absolute Error)**
+
+A che serve: Regressione dove ci sono dati "sporchi" o outlier.
+
+Come funziona: Calcola la differenza assoluta: ∣y− 
+y
+^
+​	
+ ∣.
+
+**Caratteristica**: È più robusta agli outlier rispetto a MSE, perché l'errore cresce linearmente e non quadraticamente.
+
+**Esempio**: Stimare il tempo di arrivo di un delivery (se un driver si ferma 1 ora, l'MSE sballerebbe tutto il training, L1 lo gestisce meglio).
+
+3) **nn.SmoothL1Loss() (o Huber Loss)**
+
+**A che serve:** Una via di mezzo tra MSE e L1.
+
+**Come funziona**: Si comporta come MSE quando l'errore è piccolo (per convergere bene) e come L1 quando l'errore è grande (per non impazzire con gli outlier).
+
+**Esempio**: Molto usata nel rilevamento oggetti (Object Detection, es. YOLO) per prevedere le coordinate dei box attorno agli oggetti.

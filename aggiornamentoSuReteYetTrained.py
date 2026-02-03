@@ -7,8 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
-
-writer = SummaryWriter()
+import datetime
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -16,15 +15,25 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-batch_size=1
+lr = 0.0001
+date=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+fold = input("Inserisci il numero o il nome del fold o del test: ")
+epochNumber = int(input("Inserisci il numero di epoche: "))
+batch_size = int(input("Inserisci il numero di batch: "))
+
+str_log = f'run_batch_{batch_size}_lr_{lr}_epoch{epochNumber}_Fold_{fold}_data_{date}'
+
+writer = SummaryWriter('runs/' + str_log, comment=str_log + f" batch_{batch_size} lr_{lr} epoch{epochNumber} Fold_{fold}")
+
 
 #per il training prendo i dati 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
 
 # prendiamo anche il testset per calcolare l'accuratezza
 testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
+testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0)
 
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -92,7 +101,7 @@ criterion = nn.CrossEntropyLoss()
 #dobbiamo iniziare a giocare anche sul learningRate
 #0.001 accuratezza salita esponenzialmente con 4 di batch_size
 #0.00001 accuratezza scesa esponenzialmente con  4 di batch_size ogni volta diminuiva sempre più
-optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9)
 
 
 if __name__ == '__main__':
@@ -106,8 +115,10 @@ if __name__ == '__main__':
     print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
 
     # Training
-    for epoch in range(5):  # loop over the dataset multiple times
+    for epoch in range(epochNumber):  # loop over the dataset multiple times
         running_loss = 0.0
+        total = 0
+        correct = 0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
@@ -117,43 +128,66 @@ if __name__ == '__main__':
 
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
+            lossTraining = criterion(outputs, labels)
+            lossTraining.backward()
             optimizer.step()
 
-            # print statistics
-            running_loss += loss.item()
-            if i % 2000 == 1999:    # print every 2000 mini-batches
-                avg_loss = running_loss / 2000
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {avg_loss:.3f}')
-                writer.add_scalar('training loss', avg_loss, epoch * len(trainloader) + i)
-                running_loss = 0.0
+            running_loss += lossTraining.item()
+
+            # --- CALCOLO ACCURACY TRAINING ---
+            # Ottieniamo la classe con la probabilità più alta
+            _, predicted = torch.max(outputs.data, 1)
+            # Aggiorniamo il numero totale di campioni
+            total += labels.size(0)
+            # Aggiorniamo il numero di previsioni corrette
+            correct += (predicted == labels).sum().item()
+
+        running_loss=running_loss / len(trainloader)
+        accuracyTraining= 100 * correct / total
+
+        print(f'[{epoch + 1}, {i:5d}] Training loss: {running_loss:.3f} - Training accuracy:{accuracyTraining:.2f}%')
+
+        writer.add_scalar('training loss', running_loss, epoch)
+        writer.add_scalar('training accuracy', accuracyTraining , epoch)
+
+                
 
         # Mostriamo una griglia di immagini e il grafo solo alla prima epoca
         if epoch == 0:
             writer.add_image('images', torchvision.utils.make_grid(images), 0)
             writer.add_graph(net, images)
 
-        # Calcolo dell'accuratezza (ripristinato)
+        # Calcolo dell'accuratezzaTest e della loss dei test
         correct = 0
         total = 0
+        running_lossTest = 0
+
         with torch.no_grad():
+
             for data in testloader:
-                imgs, lbls = data
-                outputs = net(imgs)
-                _, predicted = torch.max(outputs.data, 1)
-                total += lbls.size(0)
-                correct += (predicted == lbls).sum().item()
+                inputs, labels = data
+                # Forward pass
+                outputs = net(inputs)
         
-        accuracy = 100 * correct / total
-        print(f'Accuracy after epoch {epoch + 1}: {accuracy:.2f}%')
-        print(f'Loss after epoch {epoch + 1}: {loss:.2f}%')
-        writer.add_scalar('accuracy', accuracy, epoch)
+                # 1. Calcolo della Loss di Test
+                lossTesting = criterion(outputs, labels)
+                running_lossTest += lossTesting.item()
+                
+                # 2. Calcolo dell'Accuracy di Test
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+        accuracyTest = 100 * correct / total
+        running_lossTest = running_lossTest / len(testloader)
+        
+        print(f'[{epoch + 1}, {i:5d}] Test loss: {running_lossTest:.3f} - Test accuracy:{accuracyTest:.2f}%')
+
+        writer.add_scalar('test accuracy', accuracyTest, epoch)
+        writer.add_scalar('test loss' , running_lossTest, epoch)
 
     print('Finished Training')
-    print(f'La precisione del modello è: {accuracy:.2f}%')
-    print(f'La loss del modello è: {loss.item():.4f}')
-    
+
     # salviamo il modello
     PATH = './reteNuovaAddestrata/cifar_net_updated.pth'
     torch.save(net.state_dict(), PATH)
@@ -163,17 +197,7 @@ if __name__ == '__main__':
     grid = torchvision.utils.make_grid(images)
     writer.add_image('images', grid, 0)
     writer.add_graph(net, images)
-
-    # Mostriamo il grafico della precisione del modello con TensorBoardX (dati casuali)
-    for n_iter in range(100):
-        writer.add_scalar('Loss/train', np.random.random(), n_iter)
-        writer.add_scalar('Loss/test', np.random.random(), n_iter)
-        writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
-        writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
-
+    
     writer.close()
 
-
-
-#Ora ci occupiamo di stampare il grafico della precisione del modello con TensorBoardX
 

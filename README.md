@@ -62,7 +62,7 @@ Per vedere i log di training e i risultati:
 tensorboard --logdir runs
 ```
 
-Apri il browser e vai su `http://localhost:6006`
+Apri il browser e vai su `http://localhost:6006` o su `http://localhost:6007`
 
 ## Note
 
