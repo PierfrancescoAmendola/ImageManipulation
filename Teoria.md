@@ -90,33 +90,33 @@ Abbiamo 2 tipi principali di tipi di lossFunction in base al tipo di problema ch
 I tipi di funzioni per i problemi di **Classificazione** sono:
 1) **nn.CrossEntropyLoss()**
 
-**A che serve**: È la più usata per la classificazione Multi-classe (es. CIFAR-10, MNIST: classi 0-9).
+* **A che serve**: È la più usata per la classificazione Multi-classe (es. CIFAR-10, MNIST: classi 0-9).
 
-**Come funziona:** Combina internamente una LogSoftmax e una NLLLoss. Si aspetta che la rete restituisca dei "logits" (valori grezzi non normalizzati) per ogni classe. Penalizza fortemente se la rete dà una probabilità bassa alla classe corretta.
+* **Come funziona:** Combina internamente una LogSoftmax e una NLLLoss. Si aspetta che la rete restituisca dei "logits" (valori grezzi non normalizzati) per ogni classe. Penalizza fortemente se la rete dà una probabilità bassa alla classe corretta.
 
-**Esempio:** Riconoscere cifre scritte a mano.
+* **Esempio:** Riconoscere cifre scritte a mano.
 
 2) **nn.BCEWithLogitsLoss() (Binary Cross Entropy)**
 
-**A che serve:** Per la classificazione Binaria (solo due classi: 0 o 1, Sì o No).
+* **A che serve:** Per la classificazione Binaria (solo due classi: 0 o 1, Sì o No).
 
-**Come funziona:** È più stabile numericamente della semplice BCELoss. Si applica quando l'ultimo strato della rete è un unico neurone che deve dire "quanto è probabile che sia 1".
+* **Come funziona:** È più stabile numericamente della semplice BCELoss. Si applica quando l'ultimo strato della rete è un unico neurone che deve dire "quanto è probabile che sia 1".
 
-**Esempio:** Riconoscere se un'email è Spam (1) o Non Spam (0).
+* **Esempio:** Riconoscere se un'email è Spam (1) o Non Spam (0).
 
 3) **nn.NLLLoss() (Negative Log Likelihood)**
 
-**A che serve:** Simile alla CrossEntropy, ma si usa se la tua rete ha già un layer LogSoftmax come ultima uscita.
+* **A che serve:** Simile alla CrossEntropy, ma si usa se la tua rete ha già un layer LogSoftmax come ultima uscita.
 
-**Nota:** Spesso si preferisce usare direttamente CrossEntropyLoss (che include già la Softmax) per semplicità, ma NLLLoss è utile se devi manipolare le probabilità manualmente prima della loss
+* **Nota:** Spesso si preferisce usare direttamente CrossEntropyLoss (che include già la Softmax) per semplicità, ma NLLLoss è utile se devi manipolare le probabilità manualmente prima della loss
 
 I tipi di funzioni per i problemi di **Regressione** sono:
 
 1) **nn.MSELoss() (Mean Squared Error)**
 
-**A che serve:** È lo standard per la regressione.
+* **A che serve:** È lo standard per la regressione.
 
-**Come funziona:** Calcola la media dei quadrati delle differenze tra previsione e realtà: (y− 
+* **Come funziona:** Calcola la media dei quadrati delle differenze tra previsione e realtà: (y− 
 y
 ^
 ​	
@@ -124,28 +124,28 @@ y
 2
  .
 
-**Caratteristica:** Poiché eleva al quadrato, penalizza enormemente gli errori grandi (gli outlier).
+* **Caratteristica:** Poiché eleva al quadrato, penalizza enormemente gli errori grandi (gli outlier).
 
-**Esempio:** Prevedere il prezzo di una casa in base ai metri quadri.
+* **Esempio:** Prevedere il prezzo di una casa in base ai metri quadri.
 
 2) **nn.L1Loss() (Mean Absolute Error)**
 
-A che serve: Regressione dove ci sono dati "sporchi" o outlier.
+* **A che serve:** Regressione dove ci sono dati "sporchi" o outlier.
 
-Come funziona: Calcola la differenza assoluta: ∣y− 
+* **Come funziona:** Calcola la differenza assoluta: ∣y− 
 y
 ^
 ​	
  ∣.
 
-**Caratteristica**: È più robusta agli outlier rispetto a MSE, perché l'errore cresce linearmente e non quadraticamente.
+* **Caratteristica**: È più robusta agli outlier rispetto a MSE, perché l'errore cresce linearmente e non quadraticamente.
 
-**Esempio**: Stimare il tempo di arrivo di un delivery (se un driver si ferma 1 ora, l'MSE sballerebbe tutto il training, L1 lo gestisce meglio).
+* **Esempio**: Stimare il tempo di arrivo di un delivery (se un driver si ferma 1 ora, l'MSE sballerebbe tutto il training, L1 lo gestisce meglio).
 
 3) **nn.SmoothL1Loss() (o Huber Loss)**
 
-**A che serve:** Una via di mezzo tra MSE e L1.
+* **A che serve:** Una via di mezzo tra MSE e L1.
 
-**Come funziona**: Si comporta come MSE quando l'errore è piccolo (per convergere bene) e come L1 quando l'errore è grande (per non impazzire con gli outlier).
+* **Come funziona**: Si comporta come MSE quando l'errore è piccolo (per convergere bene) e come L1 quando l'errore è grande (per non impazzire con gli outlier).
 
-**Esempio**: Molto usata nel rilevamento oggetti (Object Detection, es. YOLO) per prevedere le coordinate dei box attorno agli oggetti.
+* **Esempio**: Molto usata nel rilevamento oggetti (Object Detection, es. YOLO) per prevedere le coordinate dei box attorno agli oggetti.
